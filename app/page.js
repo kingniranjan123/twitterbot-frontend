@@ -1,4 +1,5 @@
-"use client"; // Necesario para usar hooks en el App Router
+"use client";
+export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
