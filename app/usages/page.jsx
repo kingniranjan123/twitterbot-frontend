@@ -14,7 +14,8 @@ export default function Home() {
   const [windowWidth, setWindowWidth] = useState(0);
   const [usageStats, setUsageStats] = useState({
     openrouter: [],
-    rapidapi: []
+    rapidapi: [],
+    "twitterapi.io": []
   });
 
   const pathname = usePathname();
@@ -48,7 +49,8 @@ useEffect(() => {
 
       setUsageStats({
         openrouter: getChartData("openrouter"),
-        rapidapi: getChartData("rapidapi")
+        rapidapi: getChartData("rapidapi"),
+        "twitterapi.io": getChartData("twitterapi.io")
       });
     } catch (err) {
       console.error("Error fetching usage stats:", err);
@@ -143,6 +145,7 @@ useEffect(() => {
             <Col md={12}>
               {renderChart("OpenRouter Requests (Last 7 Days)", usageStats.openrouter)}
               {renderChart("RapidAPI Requests (Last 7 Days)", usageStats.rapidapi)}
+              {renderChart("TwitterAPI Requests (Last 7 Days)", usageStats["twitterapi.io"])}
             </Col>
           </Row>
         </Container>

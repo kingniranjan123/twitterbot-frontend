@@ -11,7 +11,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 export default function Home() {
     const [isSidebarOpen, setSidebarOpen] = useState(true);
     const [loading, setLoading] = useState(true);
-    const [apiKeys, setApiKeys] = useState({ openrouter: "", rapidapi: "" });
+    const [apiKeys, setApiKeys] = useState({ openrouter: "", rapidapi: "", twitterapi: "" });
     const [isFetching, setIsFetching] = useState(false);
     const [error, setError] = useState(false);
     const pathname = usePathname();
