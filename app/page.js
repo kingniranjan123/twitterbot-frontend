@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { getAccounts } from "../lib/api";
 import { Container, Row, Modal, Nav, Navbar, Spinner, Button  } from "react-bootstrap";
 import { usePathname } from "next/navigation"; // Importar usePathname
-import { House, ChatText, PlusCircle, Gear , Trash, ChartLine, Key, List, SignOut, PlayCircle, PauseCircle  } from "phosphor-react";
+import { House, ChatText, ToggleRight, ToggleLeft, PlusCircle, Gear , Trash, ChartLine, Key, List, SignOut, PlayCircle, PauseCircle  } from "phosphor-react";
 import './style.css'
 import "bootstrap/dist/css/bootstrap.min.css";
 import dayjs from 'dayjs';
@@ -28,7 +28,51 @@ export default function Home() {
     const [showAddAccountModal, setShowAddAccountModal] = useState(false);
     const [individualProcesses, setIndividualProcesses] = useState({});  
     const [disabledProcessButtons, setDisabledProcessButtons] = useState(false);
-    
+    const [provider, setProvider] = useState<"RAPIDAPI" | "TWITTERAPI.IO">("RAPIDAPI");
+    const [changingProvider, setChangingProvider] = useState(false);
+
+    const fetchProvider = async () => {
+      try {
+        const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/tweets/provider-source`);
+        const j = await r.json();
+        if (j?.value === "RAPIDAPI" || j?.value === "TWITTERAPI.IO") {
+          setProvider(j.value);
+        }
+      } catch (e) {
+        console.error("❌ Error getting provider:", e);
+      }
+    };
+
+    const toggleProvider = async () => {
+      if (changingProvider) return;
+      setChangingProvider(true);
+      try {
+        const next = provider === "RAPIDAPI" ? "TWITTERAPI.IO" : "RAPIDAPI";
+        const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/tweets/provider-source`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ value: next }),
+        });
+        if (!r.ok) {
+          const err = await r.json().catch(() => ({}));
+          throw new Error(err?.error || "Error changing provider");
+        }
+        const j = await r.json();
+        if (j?.value) setProvider(j.value);
+      } catch (e) {
+        console.error("❌ Error changing provider:", e);
+      } finally {
+        setChangingProvider(false);
+      }
+    };
+
+    const init = async () => {
+      await checkFetchingStatus();
+      await fetchAccounts();
+      await fetchProvider();
+      setLoading(false);
+    };
+
     const toggleProcess = (index) => {
       setActiveIndex((prev) => (prev === index ? null : index));
     };
@@ -274,31 +318,37 @@ export default function Home() {
             {/* Page Content */}
             <Container fluid className="py-4">
             <Row>
-            <div className="col-12 col-md-5">
-            <h5 className="dashboard-title">Dashboard <span className="mensajes-title">&gt; Home</span></h5>
-            </div>
-            <div className="col-md-3">
-            </div>
-            <div className="col-6 col-md-3 d-flex justify-content-center">
-            <button 
-                  className={`text-center btn ${isFetching ? 'btn-danger' : 'btn-primary'} btn-account-ps3 btn-read`} 
+              <div className="col-12 col-md-5">
+                <h5 className="dashboard-title">Dashboard <span className="mensajes-title">&gt; Home</span></h5>
+              </div>
+
+              {/* Toggle Provider */}
+              <div className="col-12 col-md-3 d-flex justify-content-center align-items-center mb-3 mb-md-0">
+                <div className="provider-toggle" role="button" aria-label="Cambiar proveedor" onClick={toggleProvider}>
+                  <div className={`pill ${provider === "RAPIDAPI" ? "left" : "right"} ${changingProvider ? "loading" : ""}`}>
+                    <span className={`opt ${provider === "RAPIDAPI" ? "active" : ""}`}>RapidAPI</span>
+                    <span className={`opt ${provider === "TWITTERAPI.IO" ? "active" : ""}`}>TwitterAPI.io</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Start, Stop */}
+              <div className="col-6 col-md-3 d-flex justify-content-center">
+                <button
+                  className={`text-center btn ${isFetching ? 'btn-danger' : 'btn-primary'} btn-account-ps3 btn-read`}
                   onClick={startStopProcess}
-              >
+                >
                   {isFetching ? 'Stop Process' : 'Start Process'}
-              </button>
-            </div>
-            <div className="col-6 col-md-1 d-flex justify-content-center">
-            <button className="btn-account-ps2 btn-account-ps text-center btn" onClick={handleOpenAddAccount}>
-                <Gear size={26} />
-            </button>
-            </div>
-            {/* <div className="col-12 col-md-2 d-flex justify-content-center">
-              <button className="text-center btn btn-primary btn-read" 
-              onClick={() => window.location.href = '/auth/login'}
-              >Add Account
-              </button>
-            </div> */}
+                </button>
+              </div>
+
+              <div className="col-6 col-md-1 d-flex justify-content-center">
+                <button className="btn-account-ps2 btn-account-ps text-center btn" onClick={handleOpenAddAccount}>
+                  <Gear size={26} />
+                </button>
+              </div>
             </Row>
+
 
             {/* {accounts.length === 0 ? (
                 <Alert variant="warning" className="alertme text-center">No accounts found.</Alert>
