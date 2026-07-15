@@ -1,15 +1,45 @@
-import { NextResponse } from "next/server";
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+import { NextResponse } from 'next/server'
 
-export function middleware(request) {
-    const token = request.cookies.get("auth_token")?.value; 
+export async function middleware(req) {
+    const res = NextResponse.next()
+    const supabase = createMiddlewareClient({ req, res }, {
+        supabaseUrl: 'https://tmosrdszzpgfdbexstbu.supabase.co',
+        supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRtb3NyZHN6enBnZmRiZXhzdGJ1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczOTQ3NTMyOSwiZXhwIjoyMDU1MDUxMzI5fQ.cUiNxjRcnwuelk9XHbRiRgpL88U43OBJbum82vnQlk8'
+    })
 
-    if (!token && !request.nextUrl.pathname.startsWith("/admin")) {
-        return NextResponse.redirect(new URL("/admin", request.url));
+    const {
+        data: { session },
+    } = await supabase.auth.getSession()
+
+    const { pathname } = req.nextUrl
+
+    // Allow auth routes
+    if (pathname.startsWith('/auth')) {
+        if (session) {
+            return NextResponse.redirect(new URL('/', req.url))
+        }
+        return res
     }
 
-    return NextResponse.next();
+    // Protect other routes
+    if (!session) {
+        return NextResponse.redirect(new URL('/auth/login', req.url))
+    }
+
+    return res
 }
 
 export const config = {
-    matcher: "/((?!admin|_next/static|_next/image|favicon.ico).*)",
-};
+    matcher: [
+        /*
+         * Match all request paths except for the ones starting with:
+         * - api (API routes)
+         * - _next/static (static files)
+         * - _next/image (image optimization files)
+         * - favicon.ico (favicon file)
+         * - auth (Allow auth routes)
+         */
+        '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    ],
+}

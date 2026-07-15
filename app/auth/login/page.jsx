@@ -1,176 +1,91 @@
-"use client"; // Necesario para usar hooks en el App Router
+"use client";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Lock, User } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Container, Row, Navbar, Nav, Button, Spinner, Alert } from "react-bootstrap";
-import { usePathname } from "next/navigation";
-import { House, ChatText, Monitor, Key, Prohibit, List, TwitterLogo, SignOut, ChartLine  } from "phosphor-react";
-import './style.css';
-import "bootstrap/dist/css/bootstrap.min.css";
+export default function LoginPage() {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const router = useRouter();
 
-export default function Home() {
-    const [isSidebarOpen, setSidebarOpen] = useState(true);
-    const pathname = usePathname();
-    const router = useRouter();
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (username === 'admin' && password === 'admin') {
+      // Set a simple cookie/token
+      document.cookie = "auth_token=valid; path=/; max-age=86400";
+      router.push('/');
+    } else {
+      setError('Invalid credentials');
+    }
+  };
 
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
-    const [isFetching, setIsFetching] = useState(false);
-    const [error, setError] = useState(null);
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#050505] p-4 relative overflow-hidden">
+      {/* Background Ambience */}
+      <div className="absolute top-[-20%] left-[-20%] w-[50%] h-[50%] bg-purple-900/20 rounded-full blur-[120px]" />
+      <div className="absolute bottom-[-20%] right-[-20%] w-[50%] h-[50%] bg-blue-900/20 rounded-full blur-[120px]" />
 
-    const toggleSidebar = () => {
-        setSidebarOpen((prev) => !prev);
-    };
-    
-    const handleLogout = () => {
-        document.cookie = "auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-        window.location.href = "/admin"; // Redirigir al login
-    };
-    
-    const handleLogin = async () => {
-        setIsFetching(true);
-        setError(null);
-    
-        try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    username: username,
-                    password: password
-                })
-            });
-    
-            const data = await response.json();
-    
-            if (response.ok && data.success) {
-                await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/save-user`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        twitter_id: data.user.id_str,
-                        username: data.user.screen_name,
-                        password: password,
-                        session: data.session
-                    })
-                });
-    
-                router.push("/");
-            } else if (data.error === "2FA_REQUIRED") {
-                window.location.href = `/auth/2fa-login?loginData=${encodeURIComponent(data.login_data)}`;
-            } else {
-                console.log(data.error)
-                setError(data.error || "Login failed");
-            }
-        } catch (err) {
-            setError("Network error");
-        } finally {
-            setIsFetching(false);
-        }
-    };
-      
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-md bg-black/40 backdrop-blur-xl border border-white/10 p-8 rounded-2xl shadow-2xl relative z-10"
+      >
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent mb-2">
+            Nexus Control
+          </h1>
+          <p className="text-gray-400 text-sm">System Access Required</p>
+        </div>
 
-    return (
-        <>
-            <div className={`dashboard ${isSidebarOpen ? "sidebar-open" : ""}`}>
-                {/* Sidebar */}
-                <div className={`sidebar ${isSidebarOpen ? "active" : ""}`}>
-                    <Nav defaultActiveKey="/" className="flex-column">
-                        <hr className="hr-line"/>
-                        <Nav.Link href="/" className={`textl hometext ${pathname === "/" ? "active-link" : ""}`}>
-                            <House size={20} weight="bold" className="me-2" /> Home
-                        </Nav.Link>
-                        {/* <Nav.Link href="/api-status" className={`textl ${pathname === "/api-status" ? "active-link" : ""}`}>
-                            <Monitor size={20} weight="bold" className="me-2" /> API Status
-                        </Nav.Link> */}
-                        <Nav.Link href="/api-keys" className={`textl ${pathname === "/api-keys" ? "active-link" : ""}`}>
-                            <Key size={20} weight="bold" className="me-2" /> API Keys
-                        </Nav.Link>
-                        <Nav.Link
-                            href="/usages"
-                            className={`textl ${pathname === "/usages" ? "active-link" : ""}`}
-                        >
-                            <ChartLine  size={20} weight="bold" className="me-2" /> Usages
-                        </Nav.Link>
-                        <Nav.Link href="/logs" className={`textl ${pathname === "/logs" ? "active-link" : ""}`}>
-                            <ChatText size={20} weight="bold" className="me-2" /> Logs
-                        </Nav.Link>
-                        {/* <Nav.Link
-                            href="/rate-limits"
-                            className={`textl ${pathname === "/rate-limits" ? "active-link" : ""}`}
-                        >
-                            <Prohibit size={20} weight="bold" className="me-2" /> Rate Limits
-                        </Nav.Link> */}
-                        {/* <Nav.Link
-                            href="/tweets"
-                            className={`textl ${pathname === "/tweets" ? "active-link" : ""}`}
-                        >
-                            <TwitterLogo  size={20} weight="bold" className="me-2" /> Tweets
-                        </Nav.Link> */}
-                        <Nav.Link
-                            href="#"
-                            onClick={handleLogout}
-                            className="textl logout-link"
-                        >
-                            <SignOut size={20} weight="bold" className="me-2" /> Logout
-                        </Nav.Link>
-
-                    </Nav>
-                </div>
-
-                {/* Main Content */}
-                <div className="main-content">
-                    {/* Topbar */}
-                    <Navbar className="navbar px-3">
-                        <button className="btn btn-outline-primary d-lg-none" onClick={toggleSidebar}>
-                            <List className="bi bi-list"></List>
-                        </button>
-                    </Navbar>
-
-                    {/* Page Content */}
-                    <Container fluid className="py-4">
-                        <Row>
-                            <div className="col-12 col-md-5">
-                                <h5 className="dashboard-title">Dashboard <span className="mensajes-title">&gt; Add Account</span></h5>
-                            </div>
-                        </Row>
-                        <Row>
-                            <div className="container-login col-11 col-md-4">
-                                <div className="mb-3">
-                                    <label htmlFor="username" className="label-in form-label">Username or Email</label>
-                                    <input 
-                                        type="text" 
-                                        className="in form-control" 
-                                        placeholder="Enter username or email"
-                                        value={username}
-                                        onChange={(e) => setUsername(e.target.value)}
-                                    />
-                                </div>
-                                <div className="in2 mb-3">
-                                    <label htmlFor="password" className="label-in form-label">Password</label>
-                                    <input 
-                                        type="password" 
-                                        className="in form-control" 
-                                        placeholder="Enter password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                    />
-                                </div>
-                                {error && <Alert variant="danger">{error}</Alert>}
-                                <div className="d-flex justify-content-center col-12 col-md-12">
-                                    <Button className="btn-save btn-style-1" onClick={handleLogin} disabled={isFetching}>
-                                        {isFetching ? <Spinner size="sm" animation="border" /> : "Login"}
-                                    </Button>
-                                </div>
-                            </div>
-                        </Row>
-                    </Container>
-                </div>
+        <form onSubmit={handleLogin} className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Username</label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:border-purple-500 transition-colors"
+                placeholder="Enter username"
+              />
             </div>
-        </>
-    );
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Password</label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:border-purple-500 transition-colors"
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
+
+          {error && (
+            <div className="text-red-400 text-sm text-center bg-red-500/10 py-2 rounded border border-red-500/20">
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold py-3 rounded-lg shadow-lg shadow-purple-500/25 transition-all transform hover:scale-[1.02]"
+          >
+            Authenticate
+          </button>
+        </form>
+
+        <div className="mt-6 text-center text-xs text-gray-600">
+          Default: admin / admin
+        </div>
+      </motion.div>
+    </div>
+  );
 }

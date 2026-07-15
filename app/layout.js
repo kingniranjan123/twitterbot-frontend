@@ -1,16 +1,19 @@
+import ClientLayout from '@/components/ClientLayout';
 import "./globals.css";
 
 export const metadata = {
-  title: "TwitterBot",
-  description: "TwitterBot - Bot that collect and post tweets.",
+  title: "Nexus Auto-Bot",
+  description: "Advanced Twitter Automation v2",
 };
 
 export default function RootLayout({ children }) {
-    return (
-        <html lang="es">
-            <body>
-                <main>{children}</main>
-            </body>
-        </html>
-    );
+  return (
+    <html lang="en">
+      <body>
+        <ClientLayout>
+          {children}
+        </ClientLayout>
+      </body>
+    </html>
+  );
 }
