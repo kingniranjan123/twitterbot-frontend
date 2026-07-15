@@ -18,7 +18,6 @@ export default function Sidebar() {
 
   const navItems = [
     { name: 'Dashboard', href: '/', icon: <LayoutDashboard size={20} /> },
-    { name: 'Tweets', href: '/tweets', icon: <FileText size={20} /> },
     { name: 'Accounts', href: '/accounts', icon: <Users size={20} /> },
     { name: 'Logs', href: '/logs', icon: <BarChart3 size={20} /> },
     { name: 'Settings', href: '/settings', icon: <Settings size={20} /> },

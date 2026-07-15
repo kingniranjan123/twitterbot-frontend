@@ -1,155 +1,114 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
-import { Container, Row, Col, Navbar, Nav, Spinner} from "react-bootstrap";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer} from "recharts";
-import { House, ChatText, List, Key, SignOut, ChartLine} from "phosphor-react";
-import "./style.css";
-import "bootstrap/dist/css/bootstrap.min.css";
+import { motion } from "framer-motion";
+import { ChartLine } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
-export default function Home() {
-  const [isSidebarOpen, setSidebarOpen] = useState(true);
-  const [loading, setLoading] = useState(true);
-  const [windowWidth, setWindowWidth] = useState(0);
-  const [usageStats, setUsageStats] = useState({
-    openrouter: [],
-    rapidapi: [],
-    "twitterapi.io": []
-  });
+export default function UsagesPage() {
+    const [loading, setLoading] = useState(true);
+    const [usageStats, setUsageStats] = useState({
+        openrouter: [],
+        rapidapi: [],
+        "twitterapi.io": []
+    });
 
-  const pathname = usePathname();
+    useEffect(() => {
+        const fetchUsageData = async () => {
+            try {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/usage/requests-per-day`);
+                const data = await res.json();
 
-  useEffect(() => {
-    setWindowWidth(window.innerWidth);
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+                const getChartData = (apiKey) => {
+                    const days = Array.from({ length: 7 }, (_, i) => {
+                        const date = new Date();
+                        date.setDate(date.getDate() - (6 - i));
+                        const key = date.toISOString().split("T")[0];
+                        return {
+                            day: `${date.getMonth() + 1}/${date.getDate()}`,
+                            usage: data[key]?.[apiKey.toUpperCase()] || 0
+                        };
+                    });
+                    return days;
+                };
 
-useEffect(() => {
-  const fetchUsageData = async () => {
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/usage/requests-per-day`);
-      const data = await res.json();
-      console.log("📊 Data usage:", data);
+                setUsageStats({
+                    openrouter: getChartData("openrouter"),
+                    rapidapi: getChartData("rapidapi"),
+                    "twitterapi.io": getChartData("twitterapi.io")
+                });
+            } catch (err) {
+                console.error("Error fetching usage stats:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-      const getChartData = (apiKey) => {
-        const days = Array.from({ length: 7 }, (_, i) => {
-          const date = new Date();
-          date.setDate(date.getDate() - (6 - i));
-          const key = date.toISOString().split("T")[0];
-          return {
-            day: `${date.getMonth() + 1}-${date.getDate()}`,
-            usage: data[key]?.[apiKey.toUpperCase()] || 0
-          };
-        });
-        return days;
-      };
+        fetchUsageData();
+    }, []);
 
-      setUsageStats({
-        openrouter: getChartData("openrouter"),
-        rapidapi: getChartData("rapidapi"),
-        "twitterapi.io": getChartData("twitterapi.io")
-      });
-    } catch (err) {
-      console.error("Error fetching usage stats:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const renderChart = (title, data, color) => (
+        <motion.div 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="glass-panel p-6 rounded-2xl relative overflow-hidden group mb-6"
+        >
+            <div className={`absolute -right-6 -top-6 w-32 h-32 bg-gradient-to-br ${color} opacity-10 rounded-full blur-2xl`} />
+            <h3 className="text-xl font-bold mb-6 text-white">{title}</h3>
+            <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
+                        <XAxis dataKey="day" stroke="#888" tick={{ fill: '#888', fontSize: 12 }} axisLine={false} tickLine={false} />
+                        <YAxis stroke="#888" tick={{ fill: '#888', fontSize: 12 }} axisLine={false} tickLine={false} />
+                        <Tooltip 
+                            cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                            contentStyle={{ backgroundColor: '#1a1a2e', borderColor: '#333', borderRadius: '8px', color: '#fff' }}
+                        />
+                        <Bar dataKey="usage" fill="url(#colorUv)" radius={[4, 4, 0, 0]} barSize={32} />
+                        <defs>
+                            <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#8b5cf6" stopOpacity={1}/>
+                                <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                            </linearGradient>
+                        </defs>
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
+        </motion.div>
+    );
 
-  fetchUsageData();
-}, []);
-
-  const handleLogout = () => {
-    document.cookie = "auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-    window.location.href = "/admin";
-  };
-
-  const renderChart = (title, data) => {
-    let chartWidth = "50%";
-    if (windowWidth <= 600) {
-      chartWidth = "100%";
-    } else if (windowWidth <= 1335) {
-      chartWidth = "70%";
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center p-8 text-white">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+            </div>
+        );
     }
 
     return (
-      <div className="mb-4">
-        <div className="chart-usage2 d-flex justify-content-center">
-          <h6 className="mb-2">{title}</h6>
+        <div className="min-h-screen bg-[var(--background)] p-8 text-[var(--foreground)]">
+            <header className="mb-12">
+                <motion.h1
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    className="text-4xl font-extrabold bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 bg-clip-text text-transparent flex items-center gap-3"
+                >
+                    <ChartLine size={36} className="text-purple-400" />
+                    API Usage Metrics
+                </motion.h1>
+                <p className="text-gray-400 mt-2">Track your API request volume over the last 7 days</p>
+            </header>
+
+            <div className="max-w-6xl">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {renderChart("OpenRouter Requests", usageStats.openrouter, "from-purple-500 to-pink-500")}
+                    {renderChart("Twitter API Requests", usageStats["twitterapi.io"], "from-blue-500 to-cyan-500")}
+                </div>
+                <div className="mt-6 max-w-3xl">
+                    {renderChart("RapidAPI Requests", usageStats.rapidapi, "from-orange-500 to-red-500")}
+                </div>
+            </div>
         </div>
-        <div className="chart-usage d-flex justify-content-center">
-          <ResponsiveContainer width={chartWidth} height={200}>
-            <BarChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="day" angle={-45} textAnchor="end" height={40} />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="usage" fill="#007bff" barSize={40} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
     );
-  };
-
-  if (loading) {
-    return (
-      <div className="loader-container">
-        <Spinner animation="border" role="status" className="loader">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
-      </div>
-    );
-  }
-
-  return (
-    <div className={`dashboard ${isSidebarOpen ? "sidebar-open" : ""}`}>
-      <div className={`sidebar ${isSidebarOpen ? "active" : ""}`}>
-        <Nav defaultActiveKey="/" className="flex-column">
-          <hr className="hr-line" />
-          <Nav.Link href="/" className={`textl hometext ${pathname === "/" ? "active-link" : ""}`}>
-            <House size={20} weight="bold" className="me-2" /> Home
-          </Nav.Link>
-          <Nav.Link href="/api-keys" className={`textl ${pathname === "/api-keys" ? "active-link" : ""}`}>
-            <Key size={20} weight="bold" className="me-2" /> API Keys
-          </Nav.Link>
-          <Nav.Link href="/usages" className={`textl ${pathname === "/usages" ? "active-link" : ""}`}>
-            <ChartLine size={20} weight="bold" className="me-2" /> Usages
-          </Nav.Link>
-          <Nav.Link href="/logs" className={`textl ${pathname === "/logs" ? "active-link" : ""}`}>
-            <ChatText size={20} weight="bold" className="me-2" /> Logs
-          </Nav.Link>
-          <Nav.Link href="#" onClick={handleLogout} className="textl logout-link">
-            <SignOut size={20} weight="bold" className="me-2" /> Logout
-          </Nav.Link>
-        </Nav>
-      </div>
-
-      <div className="main-content">
-        <Navbar className="navbar px-3">
-          <button className="btn btn-outline-primary d-lg-none" onClick={() => setSidebarOpen(!isSidebarOpen)}>
-            <List className="bi bi-list" />
-          </button>
-        </Navbar>
-
-        <Container fluid className="py-4">
-          <Row>
-            <Col md={6}>
-              <h5 className="dashboard-title">Dashboard <span className="mensajes-title">&gt; API Usages</span></h5>
-            </Col>
-          </Row>
-          <Row>
-            <Col md={12}>
-              {renderChart("OpenRouter Requests (Last 7 Days)", usageStats.openrouter)}
-              {renderChart("RapidAPI Requests (Last 7 Days)", usageStats.rapidapi)}
-              {renderChart("TwitterAPI Requests (Last 7 Days)", usageStats["twitterapi.io"])}
-            </Col>
-          </Row>
-        </Container>
-      </div>
-    </div>
-  );
 }

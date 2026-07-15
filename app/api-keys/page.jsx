@@ -1,20 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Container, Row, Col, Navbar, Nav, Spinner, Alert, Button } from "react-bootstrap";
-import { usePathname } from "next/navigation";
-import { House, ChatText, Prohibit, List, Monitor, Key, TwitterLogo, SignOut, ChartLine} from "phosphor-react";
-import "./style.css";
-import "bootstrap/dist/css/bootstrap.min.css";
+import { motion } from "framer-motion";
+import { Key } from "lucide-react";
 
-export default function Home() {
-    const [isSidebarOpen, setSidebarOpen] = useState(true);
+export default function ApiKeysPage() {
     const [loading, setLoading] = useState(true);
     const [apiKeys, setApiKeys] = useState({ openrouter: "", rapidapi: "", twitterapi: "" });
     const [isFetching, setIsFetching] = useState(false);
     const [error, setError] = useState(false);
-    const pathname = usePathname();
     const [message, setMessage] = useState("");
 
     useEffect(() => {
@@ -29,11 +23,6 @@ export default function Home() {
         setApiKeys({ ...apiKeys, [e.target.name]: e.target.value });
     };
     
-    const handleLogout = () => {
-        document.cookie = "auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
-        window.location.href = "/admin"; // Redirigir al login
-    };
-    
     const saveApiKeys = () => {
         setIsFetching(true);
         setMessage("");
@@ -43,113 +32,72 @@ export default function Home() {
             body: JSON.stringify(apiKeys),
         })
             .then((res) => res.json())
-            .then(() => setMessage("API Keys actualizadas correctamente"))
-            .catch(() => setMessage("Error al actualizar API Keys"))
+            .then(() => setMessage("API Keys updated successfully!"))
+            .catch(() => setMessage("Error updating API Keys"))
             .finally(() => setIsFetching(false));
     };
 
     if (loading) {
         return (
-            <div className="loader-container">
-                <Spinner animation="border" role="status" className="loader">
-                    <span className="visually-hidden">Loading...</span>
-                </Spinner>
+            <div className="min-h-screen flex items-center justify-center p-8 text-white">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
             </div>
         );
     }
 
     return (
-        <div className={`dashboard ${isSidebarOpen ? "sidebar-open" : ""}`}>
-            <div className={`sidebar ${isSidebarOpen ? "active" : ""}`}>
-            <Nav defaultActiveKey="/" className="flex-column">
-            <hr className="hr-line"/>
-              <Nav.Link
-                href="/"
-                className={`textl hometext ${pathname === "/" ? "active-link" : ""}`}
-              >
-                <House size={20} weight="bold" className="me-2" /> Home
-              </Nav.Link>
-              {/* <Nav.Link
-                href="/api-status"
-                className={`textl ${pathname === "/api-status" ? "active-link" : ""}`}
-              >
-                <Monitor  size={20} weight="bold" className="me-2" /> API Status
-              </Nav.Link> */}
-              <Nav.Link
-                href="/api-keys"
-                className={`textl ${pathname === "/api-keys" ? "active-link" : ""}`}
-              >
-                <Key  size={20} weight="bold" className="me-2" /> API Keys
-              </Nav.Link>
-	              <Nav.Link
-	                href="/usages"
-	                className={`textl ${pathname === "/usages" ? "active-link" : ""}`}
-	              >
-	                <ChartLine  size={20} weight="bold" className="me-2" /> Usages
-   	           </Nav.Link>
-              <Nav.Link
-                href="/logs"
-                className={`textl ${pathname === "/logs" ? "active-link" : ""}`}
-              >
-                <ChatText size={20} weight="bold" className="me-2" /> Logs
-              </Nav.Link>
-              {/* <Nav.Link
-                href="/rate-limits"
-                className={`textl ${pathname === "/rate-limits" ? "active-link" : ""}`}
-              >
-                <Prohibit size={20} weight="bold" className="me-2" /> Rate Limits
-              </Nav.Link> */}
-              {/* <Nav.Link
-                href="/tweets"
-                className={`textl ${pathname === "/tweets" ? "active-link" : ""}`}
-              >
-                <TwitterLogo  size={20} weight="bold" className="me-2" /> Tweets
-              </Nav.Link> */}
-              <Nav.Link
-                href="#"
-                onClick={handleLogout}
-                className="textl logout-link"
-              >
-                <SignOut size={20} weight="bold" className="me-2" /> Logout
-              </Nav.Link>
-            </Nav>
-            </div>
+        <div className="min-h-screen bg-[var(--background)] p-8 text-[var(--foreground)]">
+            <header className="mb-12">
+                <motion.h1
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    className="text-4xl font-extrabold bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 bg-clip-text text-transparent flex items-center gap-3"
+                >
+                    <Key size={36} className="text-purple-400" />
+                    API Keys Management
+                </motion.h1>
+                <p className="text-gray-400 mt-2">Configure your external API credentials</p>
+            </header>
 
-            <div className="main-content">
-                <Navbar className="navbar px-3">
-                    <button className="btn btn-outline-primary d-lg-none" onClick={() => setSidebarOpen(!isSidebarOpen)}>
-                        <List className="bi bi-list" />
+            <motion.div 
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="max-w-4xl glass-panel p-8 rounded-2xl"
+            >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    {Object.entries(apiKeys).map(([keyName, keyValue]) => (
+                        <div key={keyName} className="space-y-2">
+                            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                {keyName} API KEY
+                            </label>
+                            <input
+                                type="text"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition-colors"
+                                placeholder={`Enter ${keyName} API Key`}
+                                name={keyName}
+                                value={keyValue || ""}
+                                onChange={handleInputChange}
+                            />
+                        </div>
+                    ))}
+                </div>
+                
+                <div className="flex flex-col items-start gap-4">
+                    <button
+                        onClick={saveApiKeys}
+                        disabled={isFetching}
+                        className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isFetching ? "Saving..." : "Save Configuration"}
                     </button>
-                </Navbar>
-
-                <Container fluid className="py-4">
-                    <Row>
-                        <Col md={5}><h5 className="dashboard-title">Dashboard <span className="mensajes-title">&gt; API Keys</span></h5></Col>
-                    </Row>
-                    <Row>
-                        {Object.entries(apiKeys).map(([keyName, keyValue]) => (
-                            <Col md={6} key={keyName}>
-                                <div className="mb-3">
-                                    <label className="label-in form-label">{keyName.toUpperCase()} API Key</label>
-                                    <input type="text" className="in form-control" placeholder='Enter your API Key' name={keyName} value={keyValue || ''} onChange={handleInputChange} />
-                                </div>
-                            </Col>
-                        ))}
-                    </Row>
-                    <div className="d-flex justify-content-center">
-                        <Button className="btn-save btn-style-1" onClick={saveApiKeys} disabled={isFetching}>
-                            {isFetching ? "Saving..." : "Save"}
-                        </Button>
-                    </div>
+                    
                     {message && (
-                        <Row>
-                            <Col>
-                                <Alert className='alertme' variant={message.includes("Error") ? "danger" : "success"}>{message}</Alert>
-                            </Col>
-                        </Row>
+                        <div className={`px-4 py-2 rounded-lg text-sm border ${message.includes("Error") ? 'bg-red-500/10 text-red-400 border-red-500/20' : 'bg-green-500/10 text-green-400 border-green-500/20'}`}>
+                            {message}
+                        </div>
                     )}
-                </Container>
-            </div>
+                </div>
+            </motion.div>
         </div>
     );
 }
