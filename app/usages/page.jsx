@@ -94,7 +94,7 @@ export default function UsagesPage() {
                     animate={{ x: 0, opacity: 1 }}
                     className="text-4xl font-extrabold bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 bg-clip-text text-transparent flex items-center gap-3"
                 >
-                    <ChartLine size={36} className="text-purple-400" />
+                    <LineChart size={36} className="text-purple-400" />
                     API Usage Metrics
                 </motion.h1>
                 <p className="text-gray-400 mt-2">Track your API request volume over the last 7 days</p>

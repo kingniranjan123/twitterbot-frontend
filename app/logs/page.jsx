@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ChatText, Activity, XCircle, CheckCircle } from "lucide-react";
+import { MessageSquare, Activity, XCircle, CheckCircle } from "lucide-react";
 import { getAccounts } from "../../lib/api";
 
 export default function LogsPage() {
@@ -68,7 +68,7 @@ export default function LogsPage() {
                     animate={{ x: 0, opacity: 1 }}
                     className="text-4xl font-extrabold bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 bg-clip-text text-transparent flex items-center gap-3"
                 >
-                    <ChatText size={36} className="text-purple-400" />
+                    <MessageSquare size={36} className="text-purple-400" />
                     System Logs
                 </motion.h1>
                 <p className="text-gray-400 mt-2">Activity and error logs across all monitored accounts</p>
