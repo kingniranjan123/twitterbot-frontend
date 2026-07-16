@@ -330,14 +330,4 @@ export default function AccountsPage() {
       </AnimatePresence>
     </div>
   );
-
-  function parseBulkInput(raw) {
-    const lines = raw.trim().split("\n").filter(l => l.trim());
-    return lines.map(line => {
-      const dashIdx = line.lastIndexOf(" - ");
-      const label = dashIdx >= 0 ? line.slice(dashIdx + 3).trim() : "";
-      const parts = (dashIdx >= 0 ? line.slice(0, dashIdx) : line).trim().split(/\s+/);
-      return { username: parts[0] || "", password: parts[1] || "", twofa_secret: parts[2] || "", label: label || parts[0] || "" };
-    });
-  }
 }
