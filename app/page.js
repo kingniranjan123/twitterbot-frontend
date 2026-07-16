@@ -32,7 +32,7 @@ export default function Dashboard() {
   const handleStart = async () => {
     setLoading(true);
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/start-fetch`, { method: 'POST' });
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/start-fetch`, { method: 'POST' });
       setIsRunning(true);
     } catch (e) {
       console.error("Start failed", e);
@@ -41,23 +41,53 @@ export default function Dashboard() {
   };
 
   const handleStop = async () => {
-    // Assuming backend has a stop endpoint or we just simulate stop
     try {
-      // await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/stop-fetch`, { method: 'POST' }); 
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/stop-fetch`, { method: 'POST' }); 
       setIsRunning(false);
     } catch (e) { console.error(e) }
+  };
+
+  const [isPosting, setIsPosting] = useState(false);
+
+  useEffect(() => {
+    const checkPostingStatus = async () => {
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/status-post`);
+            if (response.ok) {
+                const data = await response.json();
+                setIsPosting(data.status === "running");
+            }
+        } catch (error) {
+            console.error("Failed to fetch posting status:", error);
+        }
+    };
+    checkPostingStatus();
+  }, []);
+
+  const startStopPosting = async () => {
+      const endpoint = isPosting ? '/stop-post' : '/start-post';
+      try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, { method: 'POST' });
+          if (response.ok) {
+              const statusResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/status-post`); 
+              const statusData = await statusResponse.json();
+              setIsPosting(statusData.status === "running");
+          }
+      } catch (e) {
+          console.error("Failed to toggle posting", e);
+      }
   };
 
   const cards = [
     { title: "Active Accounts", value: stats.accounts, icon: <Users size={24} />, color: "from-blue-500 to-cyan-400" },
     { title: "Extracted", value: stats.tweets_detected, icon: <Layers size={24} />, color: "from-purple-500 to-pink-500" },
     { title: "Posted", value: stats.tweets_posted, icon: <Twitter size={24} />, color: "from-green-400 to-emerald-600" },
-    { title: "System Load", value: isRunning ? "Optimal" : "Idle", icon: <Activity size={24} />, color: "from-orange-400 to-red-500" },
+    { title: "System Load", value: isRunning || isPosting ? "Optimal" : "Idle", icon: <Activity size={24} />, color: "from-orange-400 to-red-500" },
   ];
 
   return (
     <div className="min-h-screen bg-[var(--background)] p-8 text-[var(--foreground)]">
-      <header className="flex justify-between items-center mb-12">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
         <div>
           <motion.h1
             initial={{ x: -20, opacity: 0 }}
@@ -69,14 +99,14 @@ export default function Dashboard() {
           <p className="text-gray-400 mt-2">Real-time Twitter Automation Grid</p>
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
           <button
             onClick={handleStart}
             disabled={loading || isRunning}
             className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all shadow-lg hover:scanlines
                 ${isRunning
                 ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:scale-105 text-white shadow-green-500/20'
+                : 'bg-gradient-to-r from-blue-500 to-cyan-600 hover:scale-105 text-white shadow-blue-500/20'
               }`}
           >
             <Play size={20} fill="currentColor" /> {isRunning ? "System Active" : "Initialize System"}
@@ -90,6 +120,18 @@ export default function Dashboard() {
               <Square size={20} fill="currentColor" /> Terminate
             </button>
           )}
+
+          <button
+              onClick={startStopPosting}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all shadow-lg 
+                  ${isPosting
+                  ? 'bg-red-500/10 text-red-400 border border-red-500/50 hover:bg-red-500 hover:text-white'
+                  : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:scale-105 text-white shadow-green-500/20'
+                }`}
+          >
+              {isPosting ? <Square size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" />}
+              {isPosting ? "Stop Posting" : "Start Global Posting"}
+          </button>
         </div>
       </header>
 
