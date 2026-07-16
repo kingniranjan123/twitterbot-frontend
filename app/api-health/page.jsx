@@ -33,27 +33,21 @@ export default function APIHealthPage() {
   };
 
   const StatusIcon = ({ status }) => {
-    if (status === "healthy") return <CheckCircle2 size={22} className="text-green-400" />;
-    if (status === "degraded") return <AlertCircle size={22} className="text-yellow-400" />;
-    if (status === "misconfigured") return <AlertCircle size={22} className="text-orange-400" />;
-    return <XCircle size={22} className="text-red-400" />;
+    if (status === "healthy") return <CheckCircle2 size={18} className="text-green-400" />;
+    if (status === "degraded") return <AlertCircle size={18} className="text-yellow-400" />;
+    if (status === "misconfigured") return <AlertCircle size={18} className="text-orange-400" />;
+    return <XCircle size={18} className="text-red-400" />;
   };
 
   const statusGradient = {
-    healthy: "from-green-500/20 to-emerald-500/10 border-green-500/30",
-    degraded: "from-yellow-500/20 to-amber-500/10 border-yellow-500/30",
-    misconfigured: "from-orange-500/20 to-amber-500/10 border-orange-500/30",
-    down: "from-red-500/20 to-rose-500/10 border-red-500/30",
+    healthy: "from-green-500/10 to-transparent border-green-500/20",
+    degraded: "from-yellow-500/10 to-transparent border-yellow-500/20",
+    misconfigured: "from-orange-500/10 to-transparent border-orange-500/20",
+    down: "from-red-500/10 to-transparent border-red-500/20",
   };
 
-  const statusLabel = {
-    healthy: "Operational",
-    degraded: "Degraded",
-    misconfigured: "Misconfigured",
-    down: "Down",
-  };
+  const statusLabel = { healthy: "Operational", degraded: "Degraded", misconfigured: "Misconfigured", down: "Down" };
 
-  // Default demo cards if no data yet
   const displayHealth = health.length > 0 ? health : [
     { api: "RapidAPI (twttrapi)", status: "unknown" },
     { api: "SocialData", status: "unknown" },
@@ -62,75 +56,75 @@ export default function APIHealthPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[var(--background)] p-8 text-[var(--foreground)]">
-      <header className="flex justify-between items-center mb-10">
+    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+      {/* Header */}
+      <div className="px-7 pt-6 pb-4 border-b border-white/5 flex items-center justify-between">
         <div>
-          <motion.h1 initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
-            className="text-4xl font-extrabold bg-gradient-to-r from-cyan-400 via-teal-400 to-green-500 bg-clip-text text-transparent flex items-center gap-3">
-            <Activity size={36} className="text-teal-400" /> API Health
-          </motion.h1>
-          <p className="text-gray-400 mt-2">Daily check on all external API services and credit status</p>
+          <h1 className="text-xl font-bold text-white flex items-center gap-2">
+            <Activity size={20} className="text-teal-400" /> API Health
+          </h1>
+          <p className="text-xs text-gray-500 mt-0.5">Daily automated checks on external services</p>
         </div>
         <button onClick={handleCheck} disabled={checking}
-          className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold bg-teal-600/20 hover:bg-teal-600 text-teal-200 hover:text-white border border-teal-500/50 transition-all disabled:opacity-50">
-          <Zap size={18} className={checking ? "animate-pulse" : ""} /> {checking ? "Checking..." : "Run Check Now"}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-600/15 hover:bg-teal-600/30 text-teal-300 border border-teal-500/30 transition-all disabled:opacity-50">
+          <Zap size={12} className={checking ? "animate-pulse text-yellow-400" : ""} /> {checking ? "Checking..." : "Run Check Now"}
         </button>
-      </header>
+      </div>
 
-      {loading ? (
-        <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500" /></div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {displayHealth.map((item, i) => (
-            <motion.div key={item.api} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: i * 0.1 }}
-              className={`relative glass-panel p-6 rounded-2xl border bg-gradient-to-br ${statusGradient[item.status] || "from-white/5 to-white/0 border-white/10"} overflow-hidden`}>
-              <div className="absolute -right-10 -top-10 w-32 h-32 bg-teal-500/5 rounded-full blur-2xl" />
-
-              <div className="flex items-start justify-between mb-5">
-                <div>
-                  <h3 className="text-xl font-bold text-white">{item.api}</h3>
-                  <p className="text-sm text-gray-500 mt-0.5">{item.checked_at ? `Last checked: ${new Date(item.checked_at).toLocaleString()}` : "Not checked yet"}</p>
+      <div className="p-7">
+        {loading ? (
+          <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500" /></div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            {displayHealth.map((item, i) => (
+              <motion.div key={item.api} initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: i * 0.05 }}
+                className={`glass-panel p-4 rounded-xl border bg-gradient-to-br ${statusGradient[item.status] || "from-white/5 to-transparent border-white/10"} relative overflow-hidden group hover:border-teal-500/30 transition-all`}>
+                
+                <div className="flex items-start justify-between mb-3">
+                  <div className="min-w-0 pr-2">
+                    <h3 className="text-sm font-bold text-white truncate">{item.api}</h3>
+                    <p className="text-[10px] text-gray-500 mt-0.5">{item.checked_at ? new Date(item.checked_at).toLocaleString() : "Not checked yet"}</p>
+                  </div>
+                  <StatusIcon status={item.status} />
                 </div>
-                <StatusIcon status={item.status} />
-              </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="bg-white/5 rounded-xl p-3 text-center">
-                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Status</p>
-                  <p className={`font-black text-lg ${item.status === "healthy" ? "text-green-400" : item.status === "degraded" ? "text-yellow-400" : item.status === "down" ? "text-red-400" : "text-gray-400"}`}>
-                    {statusLabel[item.status] || "Unknown"}
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <div className="bg-[var(--background)]/50 rounded-lg p-2 border border-white/5">
+                    <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Status</p>
+                    <p className={`text-xs font-bold ${item.status === "healthy" ? "text-green-400" : item.status === "degraded" ? "text-yellow-400" : item.status === "down" ? "text-red-400" : "text-gray-400"}`}>
+                      {statusLabel[item.status] || "Unknown"}
+                    </p>
+                  </div>
+                  <div className="bg-[var(--background)]/50 rounded-lg p-2 border border-white/5">
+                    <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Latency</p>
+                    <p className="text-xs font-bold text-white">{item.latency_ms ? `${item.latency_ms}ms` : "—"}</p>
+                  </div>
+                </div>
+
+                {item.credits_remaining !== undefined && item.credits_remaining !== null && (
+                  <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-2 mb-3">
+                    <p className="text-[9px] font-bold text-purple-400/70 uppercase tracking-wider mb-0.5">Credits Remaining</p>
+                    <p className="text-sm font-black text-purple-300">{Number(item.credits_remaining).toLocaleString()}</p>
+                  </div>
+                )}
+
+                {item.error && (
+                  <p className="text-[10px] text-red-400/80 bg-red-500/10 p-1.5 rounded border border-red-500/20 line-clamp-2">
+                    {item.http_code ? `HTTP ${item.http_code}: ` : ""}{item.error}
                   </p>
-                </div>
-                <div className="bg-white/5 rounded-xl p-3 text-center">
-                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Latency</p>
-                  <p className="font-black text-lg text-white">{item.latency_ms ? `${item.latency_ms}ms` : "—"}</p>
-                </div>
-              </div>
+                )}
+              </motion.div>
+            ))}
+          </div>
+        )}
 
-              {item.credits_remaining !== undefined && item.credits_remaining !== null && (
-                <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-3 mb-4">
-                  <p className="text-xs text-purple-300 font-bold">Credits Remaining</p>
-                  <p className="text-2xl font-black text-purple-300">{Number(item.credits_remaining).toLocaleString()}</p>
-                </div>
-              )}
-
-              {item.http_code && (
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span>HTTP {item.http_code}</span>
-                  {item.error && <span className="text-red-400 truncate">· {item.error.slice(0, 60)}</span>}
-                </div>
-              )}
-              {!item.http_code && item.error && (
-                <p className="text-xs text-red-400 truncate">{item.error.slice(0, 80)}</p>
-              )}
-            </motion.div>
-          ))}
+        <div className="mt-6 flex items-start gap-2.5 bg-teal-500/5 border border-teal-500/10 p-4 rounded-xl max-w-3xl">
+          <RefreshCw size={14} className="text-teal-400 mt-0.5 flex-shrink-0" />
+          <div>
+            <h4 className="text-xs font-bold text-teal-100 mb-0.5">Automated Daily Check</h4>
+            <p className="text-[11px] text-teal-100/60 leading-relaxed">System runs health checks automatically at 00:01 daily. Alerts are triggered on consecutive failures. You can manually check anytime using the button above.</p>
+          </div>
         </div>
-      )}
-
-      <div className="mt-8 glass-panel p-6 rounded-2xl border border-white/5">
-        <h3 className="font-bold text-white mb-2 flex items-center gap-2"><RefreshCw size={16} className="text-teal-400" /> Auto-Check Schedule</h3>
-        <p className="text-sm text-gray-400">The system automatically runs an API health check at <span className="text-teal-400 font-bold">00:01 every day</span> alongside the posting scheduler. Checks run in the background and results are logged here. You can also trigger an immediate check with the button above.</p>
       </div>
     </div>
   );

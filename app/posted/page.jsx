@@ -5,6 +5,8 @@ import { FileUp, CheckSquare, XSquare, Calendar } from "lucide-react";
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
+const STATUS_DOT = { active: "bg-green-500", paused: "bg-yellow-400", held: "bg-red-500" };
+
 export default function PostedTweetsPage() {
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -50,42 +52,39 @@ export default function PostedTweetsPage() {
     finally { setDayLoading(false); }
   };
 
-  const statusColor = { active: "bg-green-500", paused: "bg-yellow-500", held: "bg-red-500" };
-
   const StatusIcon = ({ status }) => {
-    if (status === "failed") return <XSquare size={16} className="text-red-400 flex-shrink-0" />;
-    return <CheckSquare size={16} className="text-green-400 flex-shrink-0" />;
+    if (status === "failed") return <XSquare size={14} className="text-red-400 flex-shrink-0" />;
+    return <CheckSquare size={14} className="text-green-400 flex-shrink-0" />;
   };
 
   return (
-    <div className="min-h-screen bg-[var(--background)] p-8 text-[var(--foreground)]">
-      <header className="mb-10">
-        <motion.h1 initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
-          className="text-4xl font-extrabold bg-gradient-to-r from-green-400 via-emerald-400 to-teal-500 bg-clip-text text-transparent flex items-center gap-3">
-          <FileUp size={36} className="text-green-400" /> Posted Tweets
-        </motion.h1>
-        <p className="text-gray-400 mt-2">Browse posted tweets by account and day</p>
-      </header>
+    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+      {/* Header */}
+      <div className="px-7 pt-6 pb-4 border-b border-white/5 flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-white flex items-center gap-2">
+            <FileUp size={20} className="text-green-400" /> Posted Tweets
+          </h1>
+          <p className="text-xs text-gray-500 mt-0.5">Browse posted tweets by account and day</p>
+        </div>
+      </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
-        {/* Column 1: Accounts */}
-        <div className="xl:col-span-1">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4">Accounts</h3>
-          {loading ? <div className="flex justify-center py-10"><div className="animate-spin h-8 w-8 border-b-2 border-green-500 rounded-full" /></div> : (
-            <div className="space-y-2">
+      <div className="flex flex-col xl:flex-row h-[calc(100vh-80px)] overflow-hidden">
+        {/* Left: Accounts */}
+        <div className="w-full xl:w-64 flex-shrink-0 border-r border-white/5 overflow-y-auto p-4 bg-white/[0.01]">
+          {loading ? <div className="flex justify-center py-10"><div className="animate-spin h-6 w-6 border-b-2 border-green-500 rounded-full" /></div> : (
+            <div className="space-y-1.5">
               {accounts.map((acc, i) => (
-                <motion.div key={acc.twitter_id} initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: i * 0.04 }}
+                <motion.div key={acc.twitter_id} initial={{ x: -10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: i * 0.02 }}
                   onClick={() => selectAccount(acc)}
-                  className={`glass-panel p-4 rounded-xl cursor-pointer transition-all hover:border-green-500/40 ${selected?.twitter_id === acc.twitter_id ? "border-green-500/60 bg-green-500/5" : "border-white/5"}`}>
-                  <div className="flex items-center gap-3">
-                    <img src={acc.profile_pic || "https://avatar.iran.liara.run/public/boy"} alt="avatar" className="w-10 h-10 rounded-full border border-green-500/30" />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-bold text-white text-sm">@{acc.username}</p>
-                        <span className={`w-2 h-2 rounded-full ${statusColor[acc.account_status] || "bg-gray-500"}`} />
-                      </div>
-                      <p className="text-xs text-gray-400">{acc.posted_count || 0} posts total</p>
-                    </div>
+                  className={`p-2.5 rounded-lg cursor-pointer transition-all border flex items-center gap-2.5 ${selected?.twitter_id === acc.twitter_id ? "border-green-500/50 bg-green-500/10" : "border-transparent hover:bg-white/5"}`}>
+                  <div className="relative flex-shrink-0">
+                    <img src={acc.profile_pic || "https://avatar.iran.liara.run/public/boy"} alt="" className="w-8 h-8 rounded-full object-cover border border-white/10" />
+                    <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-[var(--background)] ${STATUS_DOT[acc.account_status] || "bg-gray-500"}`} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-white truncate">@{acc.username}</p>
+                    <p className="text-[10px] text-gray-400">{acc.posted_count || 0} posts</p>
                   </div>
                 </motion.div>
               ))}
@@ -93,61 +92,59 @@ export default function PostedTweetsPage() {
           )}
         </div>
 
-        {/* Column 2: Days Calendar */}
-        <div className="xl:col-span-1">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4">
-            {selected ? `Days posted — @${selected.username}` : "Select account"}
-          </h3>
+        {/* Middle: Days */}
+        <div className="w-full xl:w-56 flex-shrink-0 border-r border-white/5 overflow-y-auto p-4 bg-white/[0.01]">
           {!selected ? (
-            <div className="glass-panel p-8 rounded-2xl text-center text-gray-500 text-sm">← Select an account</div>
+            <div className="text-center text-gray-500 text-xs mt-10">← Select an account</div>
           ) : daysLoading ? (
-            <div className="flex justify-center py-10"><div className="animate-spin h-8 w-8 border-b-2 border-green-500 rounded-full" /></div>
+            <div className="flex justify-center py-10"><div className="animate-spin h-5 w-5 border-b-2 border-green-500 rounded-full" /></div>
           ) : days.length === 0 ? (
-            <div className="glass-panel p-8 rounded-2xl text-center text-gray-500 text-sm">No posts found</div>
+            <div className="text-center text-gray-500 text-xs mt-10">No posts found</div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-1">
               {days.map((d, i) => (
-                <motion.div key={d.date} initial={{ x: 10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: i * 0.04 }}
+                <motion.div key={d.date} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}
                   onClick={() => selectDay(d.date)}
-                  className={`flex items-center justify-between p-4 rounded-xl cursor-pointer border transition-all hover:border-green-500/40 ${selectedDay === d.date ? "border-green-500/60 bg-green-500/5 glass-panel" : "glass-panel border-white/5"}`}>
+                  className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer border transition-all ${selectedDay === d.date ? "border-green-500/50 bg-green-500/10" : "border-transparent hover:bg-white/5"}`}>
                   <div className="flex items-center gap-2">
-                    <Calendar size={16} className="text-green-400" />
-                    <span className="font-mono text-sm text-white">{d.date}</span>
+                    <Calendar size={14} className="text-green-400 opacity-70" />
+                    <span className="font-mono text-xs font-semibold text-white">{d.date}</span>
                   </div>
-                  <span className="bg-green-500/20 text-green-300 text-xs font-bold px-2.5 py-1 rounded-full">{d.count} post{d.count > 1 ? "s" : ""}</span>
+                  <span className="bg-white/5 text-gray-300 text-[10px] font-bold px-1.5 py-0.5 rounded">{d.count}</span>
                 </motion.div>
               ))}
             </div>
           )}
         </div>
 
-        {/* Column 3+4: Day Detail */}
-        <div className="xl:col-span-2">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-4">
-            {selectedDay ? `Posts on ${selectedDay}` : "Select a day to view posts"}
-          </h3>
+        {/* Right: Posts Detail */}
+        <div className="flex-1 p-6 overflow-y-auto">
           {!selectedDay ? (
-            <div className="glass-panel p-12 rounded-2xl text-center text-gray-500">
-              <FileUp size={40} className="mx-auto mb-3 opacity-30" />
-              <p>Click a date to view what was posted that day.</p>
+            <div className="h-full flex flex-col items-center justify-center text-gray-500">
+              <FileUp size={32} className="mb-2 opacity-30" />
+              <p className="text-sm">Select a date to view posts.</p>
             </div>
           ) : dayLoading ? (
-            <div className="flex justify-center py-12"><div className="animate-spin h-10 w-10 border-b-2 border-green-500 rounded-full" /></div>
+            <div className="h-full flex items-center justify-center"><div className="animate-spin h-8 w-8 border-b-2 border-green-500 rounded-full" /></div>
           ) : dayTweets.length === 0 ? (
-            <div className="glass-panel p-12 rounded-2xl text-center text-gray-500">No tweets found for this day.</div>
+            <div className="h-full flex items-center justify-center text-gray-500 text-sm">No tweets found for this day.</div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2.5 max-w-3xl">
+              <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
+                <Calendar size={16} className="text-green-400" />
+                Posts on {selectedDay}
+              </h3>
               {dayTweets.map((t, i) => (
-                <motion.div key={t.id} initial={{ x: 10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: i * 0.05 }}
-                  className="glass-panel p-5 rounded-xl border border-white/5 hover:border-green-500/20 transition-all">
+                <motion.div key={t.id} initial={{ y: 5, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: i * 0.02 }}
+                  className="glass-panel p-3.5 rounded-xl border border-white/5 hover:border-green-500/20 transition-all">
                   <div className="flex items-start gap-3">
-                    <StatusIcon status={t.status} />
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-200 leading-relaxed">{t.tweet_text}</p>
-                      <div className="flex gap-3 mt-2 text-xs">
+                    <div className="mt-0.5"><StatusIcon status={t.status} /></div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">{t.tweet_text}</p>
+                      <div className="flex flex-wrap gap-2.5 mt-2 text-[10px] font-semibold uppercase tracking-wider">
                         <span className="text-gray-500">{t.created_at?.slice(11, 16)}</span>
-                        <span className={`font-bold ${t.status === "failed" ? "text-red-400" : "text-green-400"}`}>{t.status || "posted"}</span>
-                        {t.failure_reason && <span className="text-red-400 truncate">Reason: {t.failure_reason}</span>}
+                        <span className={t.status === "failed" ? "text-red-400" : "text-green-400"}>{t.status || "posted"}</span>
+                        {t.failure_reason && <span className="text-red-400 truncate lowercase normal-case">({t.failure_reason})</span>}
                       </div>
                     </div>
                   </div>
