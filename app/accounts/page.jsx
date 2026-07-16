@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Users, Plus, Play, Square, Activity, MoreVertical } from "lucide-react";
+import { Users, Plus, Play, Square, Activity, MoreVertical, ShieldCheck, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function AccountsPage() {
@@ -12,6 +12,7 @@ export default function AccountsPage() {
     const [showAddModal, setShowAddModal] = useState(false);
     const [newUsername, setNewUsername] = useState("");
     const [adding, setAdding] = useState(false);
+    const [isCheckingAlive, setIsCheckingAlive] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -52,6 +53,24 @@ export default function AccountsPage() {
             }
         } catch (e) {
             console.error("Failed to toggle posting", e);
+        }
+    };
+
+    const handleCheckAlive = async () => {
+        setIsCheckingAlive(true);
+        try {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/accounts/check-alive`, { method: 'POST' });
+            if (res.ok) {
+                const updatedRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/accounts`);
+                const updatedData = await updatedRes.json();
+                setAccounts(Array.isArray(updatedData) ? updatedData : []);
+            } else {
+                alert("Failed to check accounts alive status.");
+            }
+        } catch (err) {
+            console.error("Error checking alive status", err);
+        } finally {
+            setIsCheckingAlive(false);
         }
     };
 
@@ -107,7 +126,16 @@ export default function AccountsPage() {
                     <p className="text-gray-400 mt-2">Manage connected Twitter accounts and global automation</p>
                 </div>
                 
-                <div className="flex gap-4">
+                <div className="flex flex-wrap gap-4">
+                    <button
+                        onClick={handleCheckAlive}
+                        disabled={isCheckingAlive}
+                        className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold bg-purple-600/20 hover:bg-purple-600 text-purple-200 hover:text-white border border-purple-500/50 transition-all shadow-[0_0_15px_rgba(168,85,247,0.3)] disabled:opacity-50"
+                    >
+                        {isCheckingAlive ? <Loader2 size={20} className="animate-spin" /> : <ShieldCheck size={20} />} 
+                        {isCheckingAlive ? "Checking..." : "ALIVE CHECK"}
+                    </button>
+
                     <button
                         onClick={() => setShowAddModal(true)}
                         className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold bg-white/10 hover:bg-white/20 text-white transition-all shadow-lg border border-white/10"
@@ -172,7 +200,14 @@ export default function AccountsPage() {
                                 </button>
                             </div>
                             
-                            <h3 className="text-xl font-bold text-white mb-1">@{account.username}</h3>
+                            <div className="flex items-center gap-2 mb-1">
+                                <h3 className="text-xl font-bold text-white">@{account.username}</h3>
+                                {account.session ? (
+                                    <span className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.8)] animate-pulse" title="Connected"></span>
+                                ) : (
+                                    <span className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" title="Disconnected"></span>
+                                )}
+                            </div>
                             <p className="text-sm text-gray-400 mb-4 font-mono text-xs truncate">{account.twitter_id}</p>
                             
                             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">

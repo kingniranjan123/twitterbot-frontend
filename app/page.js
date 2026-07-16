@@ -16,17 +16,36 @@ export default function Dashboard() {
   const [isRunning, setIsRunning] = useState(false);
 
   useEffect(() => {
-    // Determine initial running state if possible, or assume stopped
-    // Start stat simulation
-    const interval = setInterval(() => {
-      setStats(prev => ({
-        accounts: 5,
-        tweets_detected: prev.tweets_detected + (isRunning ? Math.floor(Math.random() * 3) : 0),
-        tweets_posted: prev.tweets_posted + (isRunning && Math.random() > 0.8 ? 1 : 0),
-        active_threads: isRunning ? 4 : 0
-      }));
-    }, 5000);
-    return () => clearInterval(interval);
+    let intervalId;
+
+    const fetchStats = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/accounts`);
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          const activeAccounts = data.filter(acc => acc.session).length;
+          const totalExtracted = data.reduce((sum, acc) => sum + (acc.collected_tweets || 0), 0);
+          
+          setStats(prev => ({
+            ...prev,
+            accounts: activeAccounts,
+            tweets_detected: totalExtracted,
+            active_threads: isRunning ? activeAccounts : 0
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch real stats:", err);
+      }
+    };
+
+    fetchStats();
+    
+    // Poll stats every 10 seconds if running
+    intervalId = setInterval(() => {
+      fetchStats();
+    }, 10000);
+
+    return () => clearInterval(intervalId);
   }, [isRunning]);
 
   const handleStart = async () => {
