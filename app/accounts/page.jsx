@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Users, Plus, Play, Pause, LogIn, X, Upload, ShieldCheck, Loader2, Settings, MoreHorizontal
+  Users, Plus, Play, Pause, LogIn, X, Upload, ShieldCheck, Loader2, Settings, MoreHorizontal, CheckCircle2, XCircle
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -101,10 +101,14 @@ export default function AccountsPage() {
     try {
       const res = await fetch(`${API}/api/account/${twitter_id}/post-now`, { method: "POST" });
       const data = await res.json();
-      alert(data.message);
+      if (!res.ok) {
+        console.error("Posting failed:", data.message);
+      } else {
+        console.log("Post success:", data.message);
+      }
       fetchAccounts();
     } catch (e) {
-      alert("Error calling Post Now: " + String(e));
+      console.error("Error calling Post Now: ", e);
     }
   };
 
@@ -268,12 +272,14 @@ export default function AccountsPage() {
                     return new Date(d).toLocaleString();
                   };
                   
-                  let nextPostEst = "N/A";
-                  if (account.last_post && account.post_delay_seconds) {
-                    const nextTime = new Date(new Date(account.last_post).getTime() + account.post_delay_seconds * 1000);
-                    nextPostEst = nextTime > new Date() ? nextTime.toLocaleString() : "Now";
-                  } else if (account.collected_tweets > 0 && account.account_status === "active") {
-                    nextPostEst = "Now";
+                  let nextPostEst = account.next_post_time || "N/A";
+                  if (!account.next_post_time) {
+                    if (account.last_post && account.post_delay_seconds) {
+                        const nextTime = new Date(new Date(account.last_post).getTime() + account.post_delay_seconds * 1000);
+                        nextPostEst = nextTime > new Date() ? nextTime.toLocaleString() : "Now";
+                    } else if (account.collected_tweets > 0 && account.account_status === "active") {
+                        nextPostEst = "Now";
+                    }
                   }
 
                   return (
@@ -303,7 +309,13 @@ export default function AccountsPage() {
                       <td className="px-3 py-2 text-gray-500">{formatDate(account.last_post)}</td>
                       <td className="px-3 py-2 text-blue-400">{nextPostEst}</td>
                       <td className="px-3 py-2 text-right" onClick={e => e.stopPropagation()}>
-                        <ActionDropdown account={account} />
+                        <div className="flex justify-end gap-2 items-center">
+                          <button onClick={(e) => { e.stopPropagation(); handlePostNow(account.twitter_id); }} 
+                            className="bg-green-600/20 hover:bg-green-600/40 text-green-400 px-2 py-1 rounded text-[10px] font-bold transition flex items-center gap-1">
+                            <Play size={10} /> Post Now
+                          </button>
+                          <ActionDropdown account={account} />
+                        </div>
                       </td>
                     </tr>
                   );

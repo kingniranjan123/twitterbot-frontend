@@ -9,6 +9,7 @@ export default function SchedulerPage() {
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [regenerating, setRegenerating] = useState(false);
+  const [regeneratingAccount, setRegeneratingAccount] = useState({});
   const [expanded, setExpanded] = useState(null);
   const [history, setHistory] = useState({});
   const [historyLoading, setHistoryLoading] = useState({});
@@ -31,6 +32,16 @@ export default function SchedulerPage() {
       await fetchSchedules();
     } catch (e) { console.error(e); }
     finally { setRegenerating(false); }
+  };
+
+  const handleRegenerateAccount = async (e, twitter_id) => {
+    e.stopPropagation();
+    setRegeneratingAccount(prev => ({ ...prev, [twitter_id]: true }));
+    try {
+      await fetch(`${API}/api/schedule/account/${twitter_id}/regenerate`, { method: "POST" });
+      await fetchSchedules();
+    } catch (e) { console.error(e); }
+    finally { setRegeneratingAccount(prev => ({ ...prev, [twitter_id]: false })); }
   };
 
   const toggleExpand = async (twitter_id) => {
@@ -98,7 +109,14 @@ export default function SchedulerPage() {
                         </span>
                       )) : <span className="text-xs text-gray-600 italic">No times scheduled</span>}
                     </div>
-                    <span className="text-gray-600 ml-auto flex-shrink-0">{isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}</span>
+                    <button onClick={(e) => handleRegenerateAccount(e, acc.twitter_id)} disabled={regeneratingAccount[acc.twitter_id]}
+                      className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-600/15 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 transition-all disabled:opacity-50">
+                      <RefreshCw size={12} className={regeneratingAccount[acc.twitter_id] ? "animate-spin" : ""} />
+                      {regeneratingAccount[acc.twitter_id] ? "Rescheduling..." : "Reschedule"}
+                    </button>
+                    <div className="flex-shrink-0 text-gray-500 hover:text-white transition-colors ml-2">
+                      <span className="text-gray-600">{isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}</span>
+                    </div>
                   </div>
 
                   {/* Expanded history */}
