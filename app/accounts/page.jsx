@@ -97,6 +97,17 @@ export default function AccountsPage() {
     finally { setCheckingAlive(false); }
   };
 
+  const handlePostNow = async (twitter_id) => {
+    try {
+      const res = await fetch(`${API}/api/account/${twitter_id}/post-now`, { method: "POST" });
+      const data = await res.json();
+      alert(data.message);
+      fetchAccounts();
+    } catch (e) {
+      alert("Error calling Post Now: " + String(e));
+    }
+  };
+
   const handleAddAccount = async (e) => {
     e.preventDefault();
     if (!newUsername) return;
@@ -173,6 +184,10 @@ export default function AccountsPage() {
               
               <div className="h-px bg-white/10 my-1"></div>
               
+              <button onClick={(e) => { e.stopPropagation(); handlePostNow(account.twitter_id); }} className="w-full px-3 py-2 text-left text-[11px] text-gray-300 hover:bg-white/5 hover:text-green-400 flex items-center gap-2">
+                <Play size={12} /> Post Now
+              </button>
+              
               <button onClick={(e) => { e.stopPropagation(); router.push(`/account/${account.twitter_id}`); }} className="w-full px-3 py-2 text-left text-[11px] text-gray-300 hover:bg-white/5 hover:text-purple-400 flex items-center gap-2">
                 <Settings size={12} /> Settings
               </button>
@@ -225,40 +240,69 @@ export default function AccountsPage() {
           <div className="border border-white/5 rounded-lg overflow-x-auto bg-[#13141a]">
             <table className="w-full text-[11px] text-left border-collapse">
               <thead>
-                <tr className="border-b border-white/5 text-gray-500 bg-[#16171f]">
-                  <th className="px-4 py-3 font-semibold w-12">#</th>
-                  <th className="px-4 py-3 font-semibold">Account</th>
-                  <th className="px-4 py-3 font-semibold">Twitter ID</th>
-                  <th className="px-4 py-3 font-semibold">Status</th>
-                  <th className="px-4 py-3 font-semibold">Followers</th>
-                  <th className="px-4 py-3 font-semibold">Extracted</th>
-                  <th className="px-4 py-3 font-semibold text-right">Actions</th>
+                <tr className="border-b border-white/5 text-gray-500 bg-[#16171f] whitespace-nowrap">
+                  <th className="px-3 py-3 font-semibold w-8">#</th>
+                  <th className="px-3 py-3 font-semibold">Account</th>
+                  <th className="px-3 py-3 font-semibold">Status</th>
+                  <th className="px-3 py-3 font-semibold">Health</th>
+                  <th className="px-3 py-3 font-semibold">Extracted</th>
+                  <th className="px-3 py-3 font-semibold">Posted Today</th>
+                  <th className="px-3 py-3 font-semibold">Last Extracted</th>
+                  <th className="px-3 py-3 font-semibold">Last Posted</th>
+                  <th className="px-3 py-3 font-semibold">Next Post Est.</th>
+                  <th className="px-3 py-3 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {accounts.map((account, i) => {
                   const cfg = STATUS_CONFIG[account.account_status] || STATUS_CONFIG.unknown;
+                  let health = { text: "text-green-400", label: "Healthy" };
+                  if (account.consecutive_failures >= 3) {
+                      health = { text: "text-red-400", label: "HELD" };
+                  } else if (account.consecutive_failures > 0) {
+                      health = { text: "text-yellow-400", label: "Warning" };
+                  }
+
+                  const formatDate = (d) => {
+                    if (!d) return "N/A";
+                    return new Date(d).toLocaleString();
+                  };
+                  
+                  let nextPostEst = "N/A";
+                  if (account.last_post && account.post_delay_seconds) {
+                    const nextTime = new Date(new Date(account.last_post).getTime() + account.post_delay_seconds * 1000);
+                    nextPostEst = nextTime > new Date() ? nextTime.toLocaleString() : "Now";
+                  } else if (account.collected_tweets > 0 && account.account_status === "active") {
+                    nextPostEst = "Now";
+                  }
+
                   return (
                     <tr key={account.id} onClick={() => router.push(`/account/${account.twitter_id}`)}
-                        className="hover:bg-white/[0.02] transition-colors cursor-pointer group">
-                      <td className="px-4 py-2.5 text-gray-600">{i + 1}</td>
-                      <td className="px-4 py-2.5">
-                        <div className="flex items-center gap-2.5">
+                        className="hover:bg-white/[0.02] transition-colors cursor-pointer group whitespace-nowrap">
+                      <td className="px-3 py-2 text-gray-600">{i + 1}</td>
+                      <td className="px-3 py-2">
+                        <div className="flex items-center gap-2">
                           <img src={account.profile_pic || "https://avatar.iran.liara.run/public/boy"} alt="" 
-                            className="w-6 h-6 rounded-full object-cover border border-white/10" />
+                            className="w-5 h-5 rounded-full object-cover border border-white/10" />
                           <span className="font-semibold text-gray-200">@{account.username}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-2.5 text-gray-500 font-mono">{account.twitter_id}</td>
-                      <td className="px-4 py-2.5">
+                      <td className="px-3 py-2">
                         <div className="flex items-center gap-1.5">
                           <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
                           <span className={`${cfg.text} font-medium`}>{cfg.label}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-2.5 text-gray-400">{(account.followers || 0).toLocaleString()}</td>
-                      <td className="px-4 py-2.5 text-gray-400">{account.collected_tweets || 0}</td>
-                      <td className="px-4 py-2.5 text-right" onClick={e => e.stopPropagation()}>
+                      <td className="px-3 py-2 font-medium">
+                        <span className={health.text}>{health.label}</span>
+                        {account.consecutive_failures > 0 && <span className="text-gray-500 ml-1">({account.consecutive_failures})</span>}
+                      </td>
+                      <td className="px-3 py-2 text-gray-400">{account.collected_tweets || 0}</td>
+                      <td className="px-3 py-2 text-gray-400">{account.posted_today || 0}</td>
+                      <td className="px-3 py-2 text-gray-500">{formatDate(account.last_extract)}</td>
+                      <td className="px-3 py-2 text-gray-500">{formatDate(account.last_post)}</td>
+                      <td className="px-3 py-2 text-blue-400">{nextPostEst}</td>
+                      <td className="px-3 py-2 text-right" onClick={e => e.stopPropagation()}>
                         <ActionDropdown account={account} />
                       </td>
                     </tr>

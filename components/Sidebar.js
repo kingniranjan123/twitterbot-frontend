@@ -27,6 +27,7 @@ export default function Sidebar() {
     { name: 'Posted Tweets', href: '/posted', icon: <FileUp size={20} /> },
     { name: 'HELD Accounts', href: '/held', icon: <ShieldAlert size={20} />, badge: 'held' },
     { name: 'Logs', href: '/logs', icon: <BarChart3 size={20} /> },
+    { name: 'API Usage', href: '/api-usage', icon: <Activity size={20} /> },
     { name: 'API Health', href: '/api-health', icon: <Activity size={20} /> },
     { name: 'Settings', href: '/settings', icon: <Settings size={20} /> },
   ];
