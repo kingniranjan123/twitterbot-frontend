@@ -25,11 +25,13 @@ export default function Dashboard() {
         if (Array.isArray(data)) {
           const activeAccounts = data.filter(acc => acc.session).length;
           const totalExtracted = data.reduce((sum, acc) => sum + (acc.collected_tweets || 0), 0);
+          const totalPosted = data.reduce((sum, acc) => sum + (acc.posted_today || 0), 0);
           
           setStats(prev => ({
             ...prev,
             accounts: activeAccounts,
             tweets_detected: totalExtracted,
+            tweets_posted: totalPosted,
             active_threads: isRunning ? activeAccounts : 0
           }));
         }
