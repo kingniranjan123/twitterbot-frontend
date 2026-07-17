@@ -39,6 +39,7 @@ export default function AccountDetails() {
     const [followsLimit, setFollowsLimit] = useState(0);  
     const [commentsLimit, setCommentsLimit] = useState(0);  
     const [retweetsLimit, setRetweetsLimit] = useState(0);  
+    const [extractionLimit, setExtractionLimit] = useState(100);
     const [extractionFilter, setExtractionFilter] = useState("cb1");
     const [selectedMethod, setSelectedMethod] = useState(1);
     const [customStyle, setCustomStyle] = useState(""); 
@@ -106,6 +107,7 @@ export default function AccountDetails() {
                     setCommentsLimit(data.user.comments_limit || 0);
                     setRetweetsLimit(data.user.retweets_limit || 0);
                     setFollowsLimit(data.user.follows_limit || 0);
+                    setExtractionLimit(data.user.extraction_limit || 100);
                     setSelectedMethod(data.user.extraction_method || 1);
 
                     const rateResp = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/logs/get_rate_limit?twitter_id=${id}`);
@@ -158,7 +160,8 @@ export default function AccountDetails() {
             keywords: keywords, extraction_filter: extractionFilter, notes: notes,
             likes_limit: likesLimit, follows_limit: followsLimit, comments_limit: commentsLimit,
             retweets_limit: retweetsLimit, retweets: retweets, comments: comments,
-            follows: follows, likes: likes, extraction_method: selectedMethod,
+            follows: follows, likes: likes, extraction_limit: extractionLimit,
+            extraction_method: selectedMethod,
         };
     
         try {
@@ -241,6 +244,7 @@ export default function AccountDetails() {
         rows.push(["language", selectedLanguage]);
         rows.push(["extraction_filter", extractionFilter]);
         rows.push(["rate_limit", rateLimit]);
+        rows.push(["extraction_limit", extractionLimit]);
         rows.push(["likes_limit", likesLimit]);
         rows.push(["comments_limit", commentsLimit]);
         rows.push(["retweets_limit", retweetsLimit]);
@@ -398,7 +402,8 @@ export default function AccountDetails() {
                                 { label: "Likes", val: likesLimit, set: setLikesLimit },
                                 { label: "Comments", val: commentsLimit, set: setCommentsLimit },
                                 { label: "Retweets", val: retweetsLimit, set: setRetweetsLimit },
-                                { label: "Follows", val: followsLimit, set: setFollowsLimit }
+                                { label: "Follows", val: followsLimit, set: setFollowsLimit },
+                                { label: "Extraction", val: extractionLimit, set: setExtractionLimit }
                             ].map((limit, idx) => (
                                 <div key={idx} className="bg-black/30 rounded-xl p-3 border border-white/5">
                                     <label className="block text-[10px] text-gray-400 uppercase tracking-wider mb-2">{limit.label}</label>
