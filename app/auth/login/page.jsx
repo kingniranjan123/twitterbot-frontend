@@ -12,7 +12,7 @@ export default function LoginPage() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    if (username === 'admin' && password === 'admin') {
+    if (username.trim().toLowerCase() === 'admin' && password.trim() === 'admin') {
       // Set a simple cookie/token
       document.cookie = "auth_token=valid; path=/; max-age=86400";
       router.push('/');
