@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
   LayoutDashboard, Users, BarChart3, Settings, LogOut,
-  CalendarClock, FileDown, FileUp, ShieldAlert, Activity
+  CalendarClock, FileDown, FileUp, ShieldAlert, Activity, TestTube
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
@@ -29,6 +29,7 @@ export default function Sidebar() {
     { name: 'Logs', href: '/logs', icon: <BarChart3 size={20} /> },
     { name: 'API Usage', href: '/api-usage', icon: <Activity size={20} /> },
     { name: 'API Health', href: '/api-health', icon: <Activity size={20} /> },
+    { name: 'Diagnostics', href: '/diagnostics', icon: <TestTube size={20} /> },
     { name: 'Settings', href: '/settings', icon: <Settings size={20} /> },
   ];
 
