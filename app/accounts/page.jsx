@@ -102,13 +102,16 @@ export default function AccountsPage() {
       const res = await fetch(`${API}/api/account/${twitter_id}/post-now`, { method: "POST" });
       const data = await res.json();
       if (!res.ok) {
-        console.error("Posting failed:", data.message);
+        console.error("Posting failed:", data.message || data.error);
+        alert(`Posting failed: ${data.message || data.error || 'Unknown error'}`);
       } else {
         console.log("Post success:", data.message);
+        alert(`Post success: ${data.message}`);
       }
       fetchAccounts();
     } catch (e) {
       console.error("Error calling Post Now: ", e);
+      alert("Error calling Post Now. Check console.");
     }
   };
 
