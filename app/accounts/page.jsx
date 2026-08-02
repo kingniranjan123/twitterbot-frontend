@@ -81,11 +81,30 @@ export default function AccountsPage() {
     setReloginLoading(prev => ({ ...prev, [twitter_id]: true }));
     setOpenDropdown(null);
     try {
-      const res = await fetch(`${API}/auth/relogin/${twitter_id}`, { method: "POST" });
-      const data = await res.json();
-      if (data.success) fetchAccounts();
-    } catch (e) { console.error(e); }
-    finally { setReloginLoading(prev => ({ ...prev, [twitter_id]: false })); }
+      let res = await fetch(`${API}/auth/relogin/${twitter_id}`, { method: "POST" });
+      let data = await res.json();
+      
+      if (!res.ok && data.error === "MISSING_PASSWORD") {
+          const pass = prompt(`We don't have a password saved for this account yet.\nPlease enter the password to save it securely and log in:`);
+          if (!pass) {
+              alert("Relogin cancelled.");
+              return;
+          }
+          res = await fetch(`${API}/auth/relogin/${twitter_id}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ password: pass })
+          });
+          data = await res.json();
+      }
+      
+      if (res.ok) alert("Relogin successful!");
+      else alert(`Relogin failed: ${data.error || data.message || 'Unknown error'}`);
+      
+      fetchAccounts();
+    } catch (e) {
+      alert("Relogin error. Check console.");
+    } finally { setReloginLoading(prev => ({ ...prev, [twitter_id]: false })); }
   };
 
   const handleCheckAlive = async () => {
